@@ -14,7 +14,24 @@ async function boot(){
  if(!session){show("loginView");show("setupView",false);setConnection("Aguardando acesso");return;}
  currentUser=session.user;
  const {data,error}=await supabaseClient.from("user_profiles").select("id,full_name,role").eq("id",currentUser.id).maybeSingle();
- if(error||!data||!["admin","assistant"].includes(data.role)){await supabaseClient.auth.signOut();show("loginView");$("loginError").textContent="Usuário sem perfil autorizado. Solicite acesso ao administrador.";return;}
+ if(error){
+  console.error("Falha ao consultar user_profiles:",error);
+  show("loginView");
+  $("loginError").textContent="Falha ao consultar perfil: "+error.message;
+  return;
+ }
+ if(!data){
+  console.error("Perfil não encontrado para auth.uid:",currentUser.id);
+  show("loginView");
+  $("loginError").textContent="Login aceito, mas não foi encontrado perfil para este usuário. ID: "+currentUser.id;
+  return;
+ }
+ if(!["admin","assistant"].includes(data.role)){
+  console.error("Papel sem autorização:",data.role);
+  show("loginView");
+  $("loginError").textContent="Perfil encontrado, mas papel sem autorização: "+String(data.role);
+  return;
+ }
  profile=data;show("loginView",false);show("appView");show("logoutBtn");show("adminPanel",profile.role==="admin");setConnection("Conectado",true);
  await refreshAll(); subscribe();
 }
