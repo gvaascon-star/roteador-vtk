@@ -1,5 +1,5 @@
 (() => {
-const DEFAULT_URL = "https://elcycasbqvsjhglluoqu.supabase.co";
+const DEFAULT_URL = "https://elcycasbqvsjhgluoqu.supabase.co";
 const DEFAULT_KEY = "sb_publishable_Rvfz3BXA_PCY4OLKHt9YPg_3UEEkPBO";
 const $ = id => document.getElementById(id);
 let supabaseClient, currentUser, profile, sellers = [], pending = null, channel;
