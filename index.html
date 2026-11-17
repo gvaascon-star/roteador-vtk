@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102b24">
+<title>Roteador VTK</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">VTK</div><div><strong>ROTEADOR</strong><small>Primeiro contato</small></div></div>
+    <div class="top-actions"><span id="connection" class="status-dot">Desconectado</span><button id="logoutBtn" class="button ghost hidden">Sair</button></div>
+  </header>
+  <main>
+    <section id="setupView" class="panel narrow hidden">
+      <div class="eyebrow">CONFIGURAÇÃO INICIAL</div><h1>Conectar ao Supabase</h1>
+      <p class="muted">Informe a URL do projeto e a chave pública. Esses dados ficam salvos apenas neste navegador.</p>
+      <label>Project URL<input id="projectUrl" placeholder="https://seuprojeto.supabase.co"></label>
+      <label>Publishable key<input id="publishableKey" placeholder="sb_publishable_..." autocomplete="off"></label>
+      <button id="saveConfig" class="button primary full">Conectar</button>
+    </section>
+
+    <section id="loginView" class="panel narrow hidden">
+      <div class="eyebrow">ACESSO VTK</div><h1>Bem-vindo</h1><p class="muted">Entre com seu usuário autorizado para acessar o roteador.</p>
+      <form id="loginForm">
+        <label>E-mail<input id="email" type="email" required autocomplete="username" placeholder="nome@empresa.com.br"></label>
+        <label>Senha<input id="password" type="password" required autocomplete="current-password" placeholder="Sua senha"></label>
+        <button class="button primary full" type="submit">Entrar</button>
+      </form><p id="loginError" class="error"></p>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="welcome-row"><div><div class="eyebrow">PAINEL DE DISTRIBUIÇÃO</div><h1>Primeiro contato</h1><p class="muted">Distribuição proporcional, compartilhada entre as assistentes.</p></div><div class="live-pill"><i></i> Sincronização ativa</div></div>
+      <div class="dashboard-grid">
+        <section class="panel next-panel">
+          <div class="eyebrow">PRÓXIMO ATENDIMENTO</div>
+          <div id="nextName" class="next-name">—</div>
+          <p id="nextMeta" class="muted">Carregando fila...</p>
+          <div class="actions"><button id="skipBtn" class="button secondary">Pular vendedor</button><button id="assignBtn" class="button primary">Encaminhado</button></div>
+          <p class="hint">“Encaminhado” registra o contato e avança a fila. “Pular” não contabiliza o contato.</p>
+          <p id="actionMessage" class="message" aria-live="polite"></p>
+        </section>
+        <section class="panel stats-panel"><div class="eyebrow">VISÃO GERAL</div><div class="stat"><strong id="sellerTotal">—</strong><span>Vendedores ativos</span></div><div class="stat"><strong id="assignedTotal">—</strong><span>Contatos distribuídos</span></div><div class="stat"><strong id="pendingName">—</strong><span>Vendedor reservado para todas</span></div></section>
+      </div>
+      <section class="panel table-panel"><div class="section-heading"><div><div class="eyebrow">EQUILÍBRIO DA FILA</div><h2>Distribuição por vendedor</h2></div><button id="refreshBtn" class="button secondary small">Atualizar</button></div><div class="table-wrap"><table><thead><tr><th>Vendedor</th><th>Peso</th><th>Contatos</th><th>Disponibilidade</th></tr></thead><tbody id="sellerRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table></div></section>
+      <section id="adminPanel" class="panel table-panel hidden"><div class="section-heading"><div><div class="eyebrow">ACESSO RESTRITO</div><h2>Administração de vendedores</h2></div><span class="admin-tag">ADMIN</span></div><p class="muted">Somente administradores podem alterar os cadastros. Edite os campos e salve cada linha.</p><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Peso</th><th>Ordem</th><th>Ativo</th><th>Disponível</th><th></th></tr></thead><tbody id="adminRows"></tbody></table></div><form id="addSellerForm" class="add-form"><input id="newSellerName" placeholder="Nome do novo vendedor" required><input id="newSellerWeight" type="number" min="1" value="1" aria-label="Peso"><button class="button primary small">Adicionar vendedor</button></form></section>
+    </section>
+  </main>
+  <footer>VTK Tubos e Conexões em Aço <span>•</span> Roteador de primeiro contato</footer>
+</div>
+<script src="./app.js"></script>
+</body></html>
