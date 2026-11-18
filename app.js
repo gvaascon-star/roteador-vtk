@@ -109,7 +109,6 @@ async function boot() {
   setConnection("Conectado", true);
 
   await refreshAll();
-  await loadHistory();
   subscribe();
 }
 
@@ -166,6 +165,7 @@ async function refreshAll() {
     $("pendingName").textContent = p?.name || "Aguardando consulta";
 
     await getNext(false);
+    await loadHistory();
 
   } finally {
     refreshing = false;
@@ -175,45 +175,6 @@ async function refreshAll() {
 // ============================================
 // PROXIMO VENDEDOR
 // ============================================
-
-async function loadHistory() {
-  const body = $("historyRows");
-  const message = $("historyMessage");
-  body.innerHTML = '<tr><td colspan="4">Carregando histórico...</td></tr>';
-  message.textContent = "";
-
-  const { data, error } = await supabaseClient.rpc("get_routing_history", {
-    p_limit: 50
-  });
-
-  if (error) {
-    body.innerHTML = '<tr><td colspan="4">Não foi possível carregar o histórico.</td></tr>';
-    message.textContent = error.message;
-    return;
-  }
-
-  const rows = data || [];
-  if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4">Ainda não há encaminhamentos registrados.</td></tr>';
-    return;
-  }
-
-  body.innerHTML = rows.map(row => {
-    const date = row.occurred_at
-      ? new Date(row.occurred_at).toLocaleString("pt-BR")
-      : "—";
-    const type = String(row.event_type || "").toLowerCase();
-    const action = type === "assigned" ? "Encaminhado"
-      : type === "skipped" || type === "skip" ? "Pulado"
-      : esc(row.event_type || "Evento");
-    return `<tr>
-      <td>${esc(date)}</td>
-      <td><strong>${esc(row.seller_name || "—")}</strong></td>
-      <td>${esc(row.actor_name || "—")}</td>
-      <td>${esc(action)}</td>
-    </tr>`;
-  }).join("");
-}
 
 async function getNext(showMessage = true) {
   const { data, error } =
@@ -277,6 +238,88 @@ function renderSellers() {
     </tr>
   `).join("") ||
     '<tr><td colspan="4">Nenhum vendedor cadastrado.</td></tr>';
+}
+
+
+// ============================================
+// HISTORICO DE ENCAMINHAMENTOS
+// ============================================
+
+async function loadHistory() {
+  const tbody = $("historyRows");
+  if (!tbody) {
+    console.warn('Elemento "historyRows" não encontrado no index.html.');
+    return;
+  }
+
+  tbody.innerHTML = '<tr><td colspan="4">Carregando histórico...</td></tr>';
+
+  try {
+    const { data: events, error } = await supabaseClient
+      .from("routing_events")
+      .select("id,created_at,seller_id,actor_user_id,event_type,skip_reason")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+
+    if (!events || events.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="4">Nenhum encaminhamento registrado.</td></tr>';
+      return;
+    }
+
+    const sellerIds = [...new Set(events.map(e => e.seller_id).filter(Boolean))];
+    const userIds = [...new Set(events.map(e => e.actor_user_id).filter(Boolean))];
+
+    const [sellerResult, profileResult] = await Promise.all([
+      sellerIds.length
+        ? supabaseClient.from("sellers").select("id,name").in("id", sellerIds)
+        : Promise.resolve({ data: [], error: null }),
+      userIds.length
+        ? supabaseClient.from("user_profiles").select("id,full_name").in("id", userIds)
+        : Promise.resolve({ data: [], error: null })
+    ]);
+
+    if (sellerResult.error) throw sellerResult.error;
+    if (profileResult.error) throw profileResult.error;
+
+    const sellerNames = new Map(
+      (sellerResult.data || []).map(s => [s.id, s.name])
+    );
+    const profileNames = new Map(
+      (profileResult.data || []).map(p => [p.id, p.full_name])
+    );
+
+    tbody.innerHTML = events.map(event => {
+      const assigned = event.event_type === "assigned";
+      const actionLabel = assigned ? "Encaminhado" : "Pulado";
+      const dateLabel = new Date(event.created_at).toLocaleString("pt-BR");
+      const sellerName = sellerNames.get(event.seller_id) || "Vendedor não encontrado";
+      const actorName = profileNames.get(event.actor_user_id) || "Usuário não identificado";
+      const reason = !assigned && event.skip_reason
+        ? `<small class="history-reason">${esc(event.skip_reason)}</small>`
+        : "";
+
+      return `
+        <tr>
+          <td>${esc(dateLabel)}</td>
+          <td><strong>${esc(sellerName)}</strong></td>
+          <td>${esc(actorName)}</td>
+          <td>
+            <span class="availability ${assigned ? "yes" : "no"}">
+              ${actionLabel}
+            </span>
+            ${reason}
+          </td>
+        </tr>
+      `;
+    }).join("");
+  } catch (error) {
+    console.error("Falha ao carregar histórico:", error);
+    tbody.innerHTML =
+      `<tr><td colspan="4">Não foi possível carregar o histórico: ${esc(error.message)}</td></tr>`;
+  }
 }
 
 // ============================================
@@ -501,7 +544,11 @@ $("skipBtn").addEventListener("click", async () => {
 // ============================================
 
 $("refreshBtn").addEventListener("click", refreshAll);
-$("historyRefreshBtn").addEventListener("click", loadHistory);
+
+const historyRefreshButton = $("historyRefreshBtn");
+if (historyRefreshButton) {
+  historyRefreshButton.addEventListener("click", loadHistory);
+}
 
 // ============================================
 // SAIR
