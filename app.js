@@ -109,6 +109,7 @@ async function boot() {
   setConnection("Conectado", true);
 
   await refreshAll();
+  await loadHistory();
   subscribe();
 }
 
@@ -174,6 +175,45 @@ async function refreshAll() {
 // ============================================
 // PROXIMO VENDEDOR
 // ============================================
+
+async function loadHistory() {
+  const body = $("historyRows");
+  const message = $("historyMessage");
+  body.innerHTML = '<tr><td colspan="4">Carregando histórico...</td></tr>';
+  message.textContent = "";
+
+  const { data, error } = await supabaseClient.rpc("get_routing_history", {
+    p_limit: 50
+  });
+
+  if (error) {
+    body.innerHTML = '<tr><td colspan="4">Não foi possível carregar o histórico.</td></tr>';
+    message.textContent = error.message;
+    return;
+  }
+
+  const rows = data || [];
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="4">Ainda não há encaminhamentos registrados.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = rows.map(row => {
+    const date = row.occurred_at
+      ? new Date(row.occurred_at).toLocaleString("pt-BR")
+      : "—";
+    const type = String(row.event_type || "").toLowerCase();
+    const action = type === "assigned" ? "Encaminhado"
+      : type === "skipped" || type === "skip" ? "Pulado"
+      : esc(row.event_type || "Evento");
+    return `<tr>
+      <td>${esc(date)}</td>
+      <td><strong>${esc(row.seller_name || "—")}</strong></td>
+      <td>${esc(row.actor_name || "—")}</td>
+      <td>${esc(action)}</td>
+    </tr>`;
+  }).join("");
+}
 
 async function getNext(showMessage = true) {
   const { data, error } =
@@ -461,6 +501,7 @@ $("skipBtn").addEventListener("click", async () => {
 // ============================================
 
 $("refreshBtn").addEventListener("click", refreshAll);
+$("historyRefreshBtn").addEventListener("click", loadHistory);
 
 // ============================================
 // SAIR
@@ -528,6 +569,16 @@ function subscribe() {
         table: "routing_state"
       },
       refreshAll
+    )
+
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "routing_events"
+      },
+      loadHistory
     )
 
     .subscribe(status => {
