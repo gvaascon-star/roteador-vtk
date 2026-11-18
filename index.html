@@ -47,6 +47,19 @@
         <section class="panel stats-panel"><div class="eyebrow">VISÃO GERAL</div><div class="stat"><strong id="sellerTotal">—</strong><span>Vendedores ativos</span></div><div class="stat"><strong id="assignedTotal">—</strong><span>Contatos distribuídos</span></div><div class="stat"><strong id="pendingName">—</strong><span>Vendedor reservado para todas</span></div></section>
       </div>
       <section class="panel table-panel"><div class="section-heading"><div><div class="eyebrow">EQUILÍBRIO DA FILA</div><h2>Distribuição por vendedor</h2></div><button id="refreshBtn" class="button secondary small">Atualizar</button></div><div class="table-wrap"><table><thead><tr><th>Vendedor</th><th>Peso</th><th>Contatos</th><th>Disponibilidade</th></tr></thead><tbody id="sellerRows"><tr><td colspan="4">Carregando...</td></tr></tbody></table></div></section>
+      <section class="panel table-panel" id="historyPanel">
+        <div class="section-heading">
+          <div><div class="eyebrow">RASTREABILIDADE</div><h2>Histórico de encaminhamentos</h2></div>
+          <button id="historyRefreshBtn" class="button secondary small">Atualizar histórico</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data e hora</th><th>Vendedor</th><th>Responsável</th><th>Ação</th></tr></thead>
+            <tbody id="historyRows"><tr><td colspan="4">Carregando histórico...</td></tr></tbody>
+          </table>
+        </div>
+        <p id="historyMessage" class="muted" aria-live="polite"></p>
+      </section>
       <section id="adminPanel" class="panel table-panel hidden"><div class="section-heading"><div><div class="eyebrow">ACESSO RESTRITO</div><h2>Administração de vendedores</h2></div><span class="admin-tag">ADMIN</span></div><p class="muted">Somente administradores podem alterar os cadastros. Edite os campos e salve cada linha.</p><div class="table-wrap"><table><thead><tr><th>Nome</th><th>Peso</th><th>Ordem</th><th>Ativo</th><th>Disponível</th><th></th></tr></thead><tbody id="adminRows"></tbody></table></div><form id="addSellerForm" class="add-form"><input id="newSellerName" placeholder="Nome do novo vendedor" required><input id="newSellerWeight" type="number" min="1" value="1" aria-label="Peso"><button class="button primary small">Adicionar vendedor</button></form></section>
     </section>
   </main>
