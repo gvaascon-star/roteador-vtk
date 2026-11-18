@@ -3,7 +3,6 @@
 
 CREATE OR REPLACE FUNCTION public.get_routing_history(p_limit INTEGER DEFAULT 50)
 RETURNS TABLE (
-    event_id UUID,
     occurred_at TIMESTAMPTZ,
     event_type TEXT,
     seller_name TEXT,
@@ -29,7 +28,6 @@ BEGIN
 
     RETURN QUERY
     SELECT
-        e.id,
         e.created_at,
         e.event_type::TEXT,
         COALESCE(s.name, 'Vendedor removido')::TEXT,
